@@ -37,6 +37,7 @@ function reducer(
     }
     case "CLEAR_FILTER": {
       return {
+        ...state,
         activeFilter: null,
       };
     }
