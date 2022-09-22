@@ -1,29 +1,26 @@
 import React, { FC, useEffect, useState } from "react";
-import { BiChevronDown } from "react-icons/bi";
 import PulseLoader from "react-spinners/PulseLoader";
 import clsx from "clsx";
 import { IoMdClose } from "react-icons/io";
 
+import { useFilter } from "../../context/store";
 import MovieCard from "../MovieCard";
 import SearchIcon from "../Shared/Icons/Search";
 
 const List: FC<{ data: any; genres: any[] }> = ({ data, genres }) => {
-  const [activeFilter, setActiveFilter] = useState<number | null>(null);
   const [filteredData, setFilteredData] = useState<any>([]);
+  const { activateFilter, clearFilter, activeFilter } = useFilter();
 
   const handleActivateFilters = (selectedId: number) => {
-    setActiveFilter(selectedId);
+    activateFilter(selectedId);
   };
 
   useEffect(() => {
-    const filtered =
-      data?.results?.filter((movie: any) => {
-        return movie.genre_ids.some((id: number) => id === activeFilter);
-      });
-
+    const filtered = data?.results?.filter((movie: any) => {
+      return movie.genre_ids.some((id: number) => id === activeFilter);
+    });
     if (activeFilter !== null) {
       setFilteredData(filtered);
-      localStorage.setItem("movie:category", activeFilter.toString());
     } else {
       setFilteredData(data?.results);
     }
@@ -90,8 +87,14 @@ const List: FC<{ data: any; genres: any[] }> = ({ data, genres }) => {
           </div>
         )}
         {!filteredData?.length && (
-          <div className="border-solid border-[1px] border-black border-t-0 h-40 w-full flex h full items-center justify-center">
+          <div className="border-solid border-[1px] border-black border-t-0 h-40 w-full flex flex-col items-center justify-center p-4 text-center">
             Sorry, there are no movies for this category at the moment 🙁
+            <div
+              className="mt-2 underline underline-offset-4 cursor-pointer"
+              onClick={clearFilter}
+            >
+              &#x2716; Clear filters
+            </div>
           </div>
         )}
       </div>
