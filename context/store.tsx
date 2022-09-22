@@ -8,21 +8,25 @@ import React, {
 
 interface ContextTypes {
   activeFilter: number | null;
+  searchParams: string;
   activateFilter: (payload: number) => void;
   clearFilter: () => void;
+  handleSearch: (payload: string) => void;
 }
 
 const initialState: ContextTypes = {
   activeFilter: null,
+  searchParams: "",
   activateFilter: () => {},
   clearFilter: () => {},
+  handleSearch: () => {},
 };
 
 export const FilterContext = createContext<ContextTypes>(initialState);
 
 function reducer(
   state: any,
-  action: { type: string; payload?: number | null }
+  action: { type: string; payload?: number | string | null }
 ) {
   switch (action.type) {
     case "ACTIVATE_FILTER": {
@@ -34,6 +38,12 @@ function reducer(
     case "CLEAR_FILTER": {
       return {
         activeFilter: null,
+      };
+    }
+    case "SEARCH": {
+      return {
+        ...state,
+        searchParams: action.payload,
       };
     }
     default: {
@@ -50,11 +60,15 @@ export const FilterProvider = (props: any) => {
 
   const clearFilter = () => dispatch({ type: "CLEAR_FILTER" });
 
+  const handleSearch = (payload: string) =>
+    dispatch({ type: "SEARCH", payload });
+
   const value = useMemo(
     () => ({
       ...state,
       activateFilter,
       clearFilter,
+      handleSearch,
     }),
     [state]
   );

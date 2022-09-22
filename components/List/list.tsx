@@ -4,27 +4,69 @@ import clsx from "clsx";
 import { IoMdClose } from "react-icons/io";
 
 import { useFilter } from "../../context/store";
+import { useDidMountEffect } from "../../hooks/useDidMountEffect";
+import { makeUniqueArray } from "../../utils";
+
 import MovieCard from "../MovieCard";
 import SearchIcon from "../Shared/Icons/Search";
 
 const List: FC<{ data: any; genres: any[] }> = ({ data, genres }) => {
   const [filteredData, setFilteredData] = useState<any>([]);
-  const { activateFilter, clearFilter, activeFilter } = useFilter();
-
+  const {
+    activateFilter,
+    clearFilter,
+    handleSearch,
+    searchParams,
+    activeFilter,
+  } = useFilter();
+  
   const handleActivateFilters = (selectedId: number) => {
     activateFilter(selectedId);
   };
 
-  useEffect(() => {
+  const matchesSearch = (words: string[]) => {
+    return words.some((word: string) =>
+      word.toLowerCase().startsWith(searchParams.toLowerCase())
+    );
+  };
+
+  useDidMountEffect(() => {
     const filtered = data?.results?.filter((movie: any) => {
       return movie.genre_ids.some((id: number) => id === activeFilter);
     });
-    if (activeFilter !== null) {
-      setFilteredData(filtered);
-    } else {
-      setFilteredData(data?.results);
+
+    const searched = data?.results?.filter((movie: any) => {
+      const words = movie.title.split(" ");
+      return matchesSearch(words);
+    });
+
+    switch (true) {
+      case activeFilter !== null && searchParams === "":
+        // FILTER ONLY
+        setFilteredData(filtered);
+        break;
+      case activeFilter === null && searchParams !== "":
+        //  SEARCH ONLY
+        setFilteredData(searched);
+        break;
+      case activeFilter !== null && searchParams !== "":
+        // FILTER AND SEARCH
+        const searchedAndFiltered = [...filtered, ...searched].filter((mov) => {
+          const words = mov.title.split(" ");
+          return (
+            mov.genre_ids.some((id: number) => id === activeFilter) &&
+            matchesSearch(words)
+          );
+        });
+        setFilteredData(makeUniqueArray(searchedAndFiltered, "id"));
+        break;
+      default:
+        // NO FILTERS AND SEARCH OR NO FILTER AND NO SEARCH
+        if (searchParams !== "") {
+          setFilteredData(searched);
+        } else setFilteredData(data?.results);
     }
-  }, [data, activeFilter]);
+  }, [data, activeFilter, searchParams]);
 
   return (
     <div>
@@ -34,6 +76,8 @@ const List: FC<{ data: any; genres: any[] }> = ({ data, genres }) => {
             <SearchIcon />{" "}
             <input
               type="text"
+              value={searchParams}
+              onChange={(e) => handleSearch(e.target.value)}
               placeholder="Search for movies"
               className="h-full focus:outline-none w-full"
             />
@@ -67,11 +111,6 @@ const List: FC<{ data: any; genres: any[] }> = ({ data, genres }) => {
           </div>
         ) : null}
       </div>
-      {/* <div className="flex items-center justify-end w-full mb-2 px-10">
-        <button className="py-[10px] px-4 rounded-[4px] hover:bg-[#f2f2f2] flex items-center gap-2">
-          <strong>Order</strong> <span>Recommended</span> <BiChevronDown />
-        </button>
-      </div> */}
       <div className="maxed:px-10">
         {filteredData ? (
           <div className="sm:border-solid sm:border-x-[1px] sm:border-t-[1px] sm:border-x-black sm:border-t-black ">
@@ -88,7 +127,7 @@ const List: FC<{ data: any; genres: any[] }> = ({ data, genres }) => {
         )}
         {!filteredData?.length && (
           <div className="border-solid border-[1px] border-black border-t-0 h-40 w-full flex flex-col items-center justify-center p-4 text-center">
-            Sorry, there are no movies for this category at the moment 🙁
+            No results 🙁
             <div
               className="mt-2 underline underline-offset-4 cursor-pointer"
               onClick={clearFilter}
