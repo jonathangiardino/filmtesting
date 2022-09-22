@@ -4,7 +4,7 @@ import clsx from "clsx";
 import { IoMdClose } from "react-icons/io";
 
 import { useFilter } from "../../context/store";
-import { useDidMountEffect } from "../../hooks/useDidMountEffect";
+// import { useDidMountEffect } from "../../hooks/useDidMountEffect";
 import { makeUniqueArray } from "../../utils";
 
 import MovieCard from "../MovieCard";
@@ -19,7 +19,7 @@ const List: FC<{ data: any; genres: any[] }> = ({ data, genres }) => {
     searchParams,
     activeFilter,
   } = useFilter();
-  
+
   const handleActivateFilters = (selectedId: number) => {
     activateFilter(selectedId);
   };
@@ -30,7 +30,7 @@ const List: FC<{ data: any; genres: any[] }> = ({ data, genres }) => {
     );
   };
 
-  useDidMountEffect(() => {
+  useEffect(() => {
     const filtered = data?.results?.filter((movie: any) => {
       return movie.genre_ids.some((id: number) => id === activeFilter);
     });
